@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if post %}
+        Редактировать запись
+    {% else %}
+        Добавить запись
+    {% endif %}
+{% endblock %}
+{% block header %}
+    {% if post %}
+        Редактировать запись
+    {% else %}
+        Добавить запись
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if post %}
+        <form action="{% url 'post_edit' username=user.username post_id=post.id %}" method="post">
+    {% else %}
+        <form action="{% url 'new_post' %}" method="post">
+    {% endif %}
+
+
+{% csrf_token %}
+{% for field in form %}
+    <div>
+        {{ field.label }}
+        <div>{{ field }}</div>
+        {{ field.errors }}
+    </div>
+{% endfor %}
+<div>
+    <button type="submit">
+        {% if post %}
+            Редактировать запись
+        {% else %}
+            Добавить запись
+        {% endif %}
+
+    </button>
+</div>
+</form>
+{% endblock %}
