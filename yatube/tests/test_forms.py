@@ -32,7 +32,7 @@ class PostFormTests(TestCase):
             'text': 'Тестовый текст',
             'group': self.group.id
         }
-        response = self.authorized_client.post(
+        self.authorized_client.post(
             reverse('new_post'),
             data=form_data,
             follow=True

@@ -31,7 +31,6 @@ class PostsURLTests(TestCase):
         """URL-адрес использует соответствующий шаблон."""
         templates_pages_names = {
             'index.html': reverse('index'),
-            'post_new.html': reverse('new_post'),
             'group.html': reverse('group_posts', kwargs={'slug': 'test-slug'}),
             'post_new.html': reverse('post_edit', kwargs={
                 'username': self.user.username,
