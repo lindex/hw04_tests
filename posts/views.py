@@ -8,12 +8,20 @@ from .models import Post, Group, User
 
 
 def index(request):
-    post_list = Post.objects.all().order_by('-pub_date')
-    paginator = Paginator(post_list, 10)
+    posts = Post.objects.all()
+    paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    return render(request, 'index.html',
-                  {'page': page, 'paginator': paginator})
+    if len(posts) < 10:
+        dict = {
+            'page': page
+        }
+    else:
+        dict = {
+            'page': page,
+            'paginator': paginator
+        }
+    return render(request, 'index.html', dict)
 
 
 def group_posts(request, slug):
