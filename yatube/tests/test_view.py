@@ -116,8 +116,7 @@ class PostsURLTests(TestCase):
             reverse('post', kwargs={
                 'username': self.user.username,
                 'post_id': self.post.id,
-            }
-                    )
+            })
         )
         post_context = {
             'post': self.post,
