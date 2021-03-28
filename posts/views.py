@@ -8,40 +8,23 @@ from .models import Post, Group, User
 
 
 def index(request):
-    posts = Post.objects.all()
-    paginator = Paginator(posts, 10)
+    post_list = Post.objects.all().order_by('-pub_date')
+    paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    if len(posts) < 10:
-        dict = {
-            'page': page
-        }
-    else:
-        dict = {
-            'page': page,
-            'paginator': paginator
-        }
-    return render(request, 'index.html', dict)
+    return render(request, 'index.html',
+                  {'page': page})
 
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts.all()
+
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    if group.posts.count() > 10:
-        dict = {
-            'page': page,
-            'group': group,
-            'paginator': paginator
-        }
-    else:
-        dict = {
-            'page': page,
-            'group': group,
-        }
-    return render(request, 'group.html', dict)
+    return render(request, 'group.html',
+                  {'group': group, 'page': page})
 
 
 class AboutAuthor(TemplateView):
