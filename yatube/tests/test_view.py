@@ -98,8 +98,7 @@ class PostsURLTests(TestCase):
             reverse('post_edit', kwargs={
                 'username': self.user.username,
                 'post_id': self.post.id,
-            }
-                    )
+            })
         )
         self.assertEqual(response.context['post'], self.post)
 
