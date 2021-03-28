@@ -12,21 +12,27 @@ def index(request):
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    return render(request, 'index.html', {'page': page})
+    return render(request, 'index.html',
+                  {'page': page, 'paginator': paginator})
 
 
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts.all()
-    return render(request, 'group.html', {'group': group, 'posts': posts})
+
+    paginator = Paginator(posts, 10)
+    page_number = request.GET.get('page')
+    page = paginator.get_page(page_number)
+    return render(request, 'group.html',
+                  {'group': group, 'page': page, 'paginator': paginator})
 
 
 class AboutAuthor(TemplateView):
-    template_name = 'aboutauthor.html'
+    template_name = '../about/templates/aboutauthor.html'
 
 
 class Tech(TemplateView):
-    template_name = 'tech.html'
+    template_name = '../about/templates/tech.html'
 
 
 @login_required
@@ -57,8 +63,9 @@ def profile(request, username):
 
 def post_view(request, username, post_id):
     author = get_object_or_404(User, username=username)
+
     post = get_object_or_404(Post, id=post_id)
-    return render(request, "post.html", {"user": author, "post": post})
+    return render(request, "post.html", {"author": author, "post": post})
 
 
 @login_required

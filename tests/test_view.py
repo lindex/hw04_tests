@@ -59,7 +59,7 @@ class PostsURLTests(TestCase):
         response = self.guest_client.get(reverse(
             'group_posts',
             kwargs={'slug': 'test-slug'}))
-        first_post = response.context['posts'][0]
+        first_post = response.context['page'][0]
         self.assertEqual(
             self.post, first_post)
         group = response.context['group']
@@ -86,12 +86,12 @@ class PostsURLTests(TestCase):
         self.assertEqual(len(response.context['page']), 1)
 
     def test_group_list_page_list_is_1(self):
-        """Удостоверимся, что на главную страницу гшруппы со списком
+        """Удостоверимся, что на главную страницу группы со списком
         постов передаётся
          ожидаемое количество постов"""
         response = self.authorized_client.get(
             reverse('group_posts', kwargs={'slug': 'test-slug'}))
-        self.assertEqual(len(response.context['posts']), 1)
+        self.assertEqual(len(response.context['page']), 1)
 
     def test_edit_post_page_show_correct_context(self):
         """Шаблон post_edit сформирован с правильным контекстом."""
