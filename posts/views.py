@@ -19,12 +19,21 @@ def index(request):
 def group_posts(request, slug):
     group = get_object_or_404(Group, slug=slug)
     posts = group.posts.all()
-
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
-    return render(request, 'group.html',
-                  {'group': group, 'page': page, 'paginator': paginator})
+    if group.posts.count() < 10:
+        dict = {
+            'page': page,
+            'group': group,
+            'paginator': paginator
+        }
+    else:
+        dict = {
+            'page': page,
+            'group': group,
+        }
+    return render(request, 'group.html', dict)
 
 
 class AboutAuthor(TemplateView):
