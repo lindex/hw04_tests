@@ -8,7 +8,7 @@ from .models import Post, Group, User
 
 
 def index(request):
-    post_list = Post.objects.all().order_by('-pub_date')
+    post_list = Post.objects.all()
     paginator = Paginator(post_list, 10)
     page_number = request.GET.get('page')
     page = paginator.get_page(page_number)
@@ -28,11 +28,11 @@ def group_posts(request, slug):
 
 
 class AboutAuthor(TemplateView):
-    template_name = '../about/templates/aboutauthor.html'
+    template_name = '../about/templates/about/aboutauthor.html'
 
 
 class Tech(TemplateView):
-    template_name = '../about/templates/tech.html'
+    template_name = '../about/templates/about/tech.html'
 
 
 @login_required
@@ -63,8 +63,7 @@ def profile(request, username):
 
 def post_view(request, username, post_id):
     author = get_object_or_404(User, username=username)
-
-    post = get_object_or_404(Post, id=post_id)
+    post = get_object_or_404(Post, author__username=username, id=post_id)
     return render(request, "post.html", {"author": author, "post": post})
 
 

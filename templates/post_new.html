@@ -7,6 +7,7 @@
         Добавить запись
     {% endif %}
 {% endblock %}
+
 {% block header %}
     {% if post %}
         Редактировать запись
@@ -21,7 +22,6 @@
     {% else %}
         <form action="{% url 'new_post' %}" method="post">
     {% endif %}
-
 
 {% csrf_token %}
 {% for field in form %}

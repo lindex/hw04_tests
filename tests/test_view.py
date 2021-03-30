@@ -35,8 +35,6 @@ class PostsURLTests(TestCase):
             'post_new.html': reverse('post_edit', kwargs={
                 'username': self.user.username,
                 'post_id': self.post.id}),
-            'aboutauthor.html': reverse('about_author'),
-            'tech.html': reverse('about_tech'),
         }
 
         for template, reverse_name in templates_pages_names.items():
@@ -120,19 +118,9 @@ class PostsURLTests(TestCase):
         post_context = {
             'post': self.post,
             'user': self.user
-            # не могу разобраться почему тут user проходит,а с author нет
         }
         for key, value in post_context.items():
             with self.subTest(key=key, value=value):
                 context = response.context[key]
                 self.assertEqual(context, value)
 
-    def test_about_author_200(self):
-        """URL, генерируемый при помощи имени about_author, доступен."""
-        response = self.guest_client.get(reverse('about_author'))
-        self.assertEqual(response.status_code, 200)
-
-    def test_about_tech_200(self):
-        """URL, генерируемый при помощи имени about_author, доступен."""
-        response = self.guest_client.get(reverse('about_tech'))
-        self.assertEqual(response.status_code, 200)

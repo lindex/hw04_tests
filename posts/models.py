@@ -26,8 +26,8 @@ class Post(models.Model):
                               blank=True, null=True, related_name='posts',
                               help_text='Укажите группу')
 
-    def __str__(self):
-        return self.text[:15]
-
     class Meta:
         ordering = ['-pub_date']
+
+    def __str__(self):
+        return self.text[:15]
