@@ -1,6 +1,8 @@
 from django.test import TestCase, Client
 from django.urls import reverse
+
 from posts.models import User
+
 
 class AboutURLTests(TestCase):
     @classmethod
@@ -13,7 +15,8 @@ class AboutURLTests(TestCase):
         cls.authorized_client.force_login(cls.user)
 
     def test_about_pages_status(self):
-        """Проверка доступности страниц about_author about_tech для неавторизованных пользователей"""
+        """Проверка доступности страниц about_author
+         about_tech для неавторизованных пользователей"""
         url_code_pages = {
             reverse('about_author'): 200,
             reverse('about_tech'): 200,

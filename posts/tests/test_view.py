@@ -123,4 +123,3 @@ class PostsViewsTests(TestCase):
             with self.subTest(key=key, value=value):
                 context = response.context[key]
                 self.assertEqual(context, value)
-
