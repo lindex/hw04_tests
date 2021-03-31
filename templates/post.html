@@ -1,8 +1,14 @@
 {% extends "base.html" %}
+{% block title %}Отдельный пост{% endblock %}
+{% block header %}<h3>Отдельный пост</h3>{% endblock %}
+
 {% block content %}
     <div class="row">
         {% include 'includes/author.html' %}
-        {% include 'includes/post.html' %}
+
+        <div class="col-md-9">
+            {% include 'includes/post.html' %}
+        </div>
 
 
     </div>

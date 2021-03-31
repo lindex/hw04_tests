@@ -1,7 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import render, get_object_or_404, redirect
-from django.views.generic.base import TemplateView
 
 from .forms import PostForm
 from .models import Post, Group, User
@@ -25,14 +24,6 @@ def group_posts(request, slug):
     page = paginator.get_page(page_number)
     return render(request, 'group.html',
                   {'group': group, 'page': page})
-
-
-class AboutAuthor(TemplateView):
-    template_name = '../about/templates/about/aboutauthor.html'
-
-
-class Tech(TemplateView):
-    template_name = '../about/templates/about/tech.html'
 
 
 @login_required
@@ -62,9 +53,8 @@ def profile(request, username):
 
 
 def post_view(request, username, post_id):
-    author = get_object_or_404(User, username=username)
     post = get_object_or_404(Post, author__username=username, id=post_id)
-    return render(request, "post.html", {"author": author, "post": post})
+    return render(request, "post.html", {"author": post.author, "post": post})
 
 
 @login_required
