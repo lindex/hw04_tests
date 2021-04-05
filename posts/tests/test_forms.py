@@ -44,9 +44,6 @@ class PostFormTests(TestCase):
         self.assertEqual(Post.objects.first().text, form_data['text'])
         self.assertEqual(Group.objects.first().title, self.group.title)
 
-
-
-
     def test_edit_post(self):
         """ при редактировании поста через форму на странице
         /<username>/<post_id>/edit/ изменяется
@@ -75,4 +72,3 @@ class PostFormTests(TestCase):
             'username': self.post.author.username, 'post_id': self.post.id}))
         self.assertEqual(response.status_code, HTTPStatus.OK)
         self.assertEqual(Post.objects.first().text, form_data['text'])
-
