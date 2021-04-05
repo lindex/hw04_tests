@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from django.test import TestCase, Client
 from django.urls import reverse
 
@@ -17,15 +19,11 @@ class AboutURLTests(TestCase):
     def test_about_pages_status(self):
         """Проверка доступности страниц about_author
          about_tech для неавторизованных пользователей"""
-        url_code_pages = {
-            reverse('about_author'): 200,
-            reverse('about_tech'): 200,
-
-        }
-        for url, code_pages in url_code_pages.items():
+        url_code_pages = ['about_author', 'about_tech']
+        for url in url_code_pages:
             with self.subTest():
-                response = self.guest_client.get(url)
-                self.assertEqual(response.status_code, code_pages)
+                response = self.guest_client.get(reverse(url))
+                self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def testabout_pages_use_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""

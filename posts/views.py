@@ -38,7 +38,7 @@ def new_post(request):
 
 
 def profile(request, username):
-    author = User.objects.get(username=username)
+    author = get_object_or_404(User, username=username)
     posts = author.posts.all()
     paginator = Paginator(posts, 10)
     page_number = request.GET.get('page')

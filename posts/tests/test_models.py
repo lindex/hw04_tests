@@ -50,12 +50,11 @@ class PostsModelTest(TestCase):
                     post._meta.get_field(value).help_text, expected
                 )
 
-    def test_str(self):
-        post = self.post
-        text = post.text
-        self.assertEqual(str(post), text[:15])
-
     def test_str_group_title(self):
-        group = self.group
-        title = str(group)
-        self.assertEqual(title, group.title)
+        post_context = {
+            str(self.post): self.post.text[:15],
+            str(self.group): self.group.title
+        }
+        for key, value in post_context.items():
+            with self.subTest(key=key, value=value):
+                self.assertEqual(key, value)

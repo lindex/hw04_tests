@@ -1,3 +1,5 @@
+from http import HTTPStatus
+
 from django.test import Client, TestCase
 from django.urls import reverse
 
@@ -32,12 +34,18 @@ class PostFormTests(TestCase):
             'text': 'Тестовый текст',
             'group': self.group.id
         }
-        self.authorized_client.post(
+        response = self.authorized_client.post(
             reverse('new_post'),
             data=form_data,
             follow=True
         )
         self.assertEqual(Post.objects.count(), 2)
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(Post.objects.first().text, form_data['text'])
+        self.assertEqual(Group.objects.first().title, self.group.title)
+
+
+
 
     def test_edit_post(self):
         """ при редактировании поста через форму на странице
@@ -47,7 +55,7 @@ class PostFormTests(TestCase):
             'text': 'Тестовый текст',
             'group': self.group.id
         }
-        response = self.authorized_client.post(
+        self.authorized_client.post(
             reverse('new_post'),
             data=form_data,
             follow=True
@@ -65,3 +73,6 @@ class PostFormTests(TestCase):
 
         self.assertRedirects(response, reverse('post', kwargs={
             'username': self.post.author.username, 'post_id': self.post.id}))
+        self.assertEqual(response.status_code, HTTPStatus.OK)
+        self.assertEqual(Post.objects.first().text, form_data['text'])
+
