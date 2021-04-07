@@ -39,14 +39,14 @@ class PostsURLTests(TestCase):
         field_help_texts = {
             self.guest_client.get('/new/'): HTTPStatus.FOUND,
             self.guest_client.get(
-                f'/{self.user.username}/{self.post.id}/edit/'):
-                HTTPStatus.FOUND,
+                f'/{self.user.username}/'
+                f'{self.post.id}/edit/'): HTTPStatus.FOUND,
             self.authorized_client.get(
-                f'/{self.user2.username}/{self.post.id}/edit/'):
-                HTTPStatus.NOT_FOUND,
+                f'/{self.user2.username}'
+                f'/{self.post.id}/edit/'): HTTPStatus.NOT_FOUND,
             self.authorized_client.get(
-                f'/{self.user.username}/{self.post2.id}/edit'):
-                HTTPStatus.MOVED_PERMANENTLY,
+                f'/{self.user.username}'
+                f'/{self.post2.id}/edit'): HTTPStatus.MOVED_PERMANENTLY,
         }
         for value, expected in field_help_texts.items():
             with self.subTest(value=value):
