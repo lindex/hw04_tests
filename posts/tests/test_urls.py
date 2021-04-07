@@ -34,10 +34,22 @@ class PostsURLTests(TestCase):
             author=cls.user2,
         )
 
-    def test_new_posts_url_guest_client(self):
-        """Страница /new/ создания поста не доступна анонимному пользователю"""
-        response = self.guest_client.get('/new/')
-        self.assertEqual(response.status_code, HTTPStatus.FOUND)
+    def test_help_text(self):
+        """Проверка страниц"""
+        field_help_texts = {
+            self.guest_client.get('/new/'): HTTPStatus.FOUND,
+            self.guest_client.get(
+                f'/{self.user.username}/{self.post.id}/edit/'): HTTPStatus.FOUND,
+            self.authorized_client.get(
+                f'/{self.user2.username}/{self.post.id}/edit/'): HTTPStatus.NOT_FOUND,
+            self.authorized_client.get(
+                f'/{self.user.username}/{self.post2.id}/edit'): HTTPStatus.MOVED_PERMANENTLY,
+        }
+        for value, expected in field_help_texts.items():
+            with self.subTest(value=value):
+                self.assertEqual(
+                    value.status_code, expected
+                )
 
     def test_urls_template(self):
         """Какой шаблон вызывается для страниц:"""
@@ -50,24 +62,6 @@ class PostsURLTests(TestCase):
             with self.subTest(url=url):
                 response = self.authorized_client.get(url)
                 self.assertTemplateUsed(response, template)
-
-    def test_post_edit_url_guest(self):
-        """Доступность страницы редактирования поста для неавт. пользователя"""
-        response = self.guest_client.get(f'/{self.user.username}/1/edit/')
-        self.assertEqual(response.status_code, HTTPStatus.FOUND)
-
-    def test_post_edit_url_authorised_not_author(self):
-        """Доступность страницы редактирования поста для не автора поста"""
-        response = self.authorized_client.get(
-            f'/{self.user2.username}/1/edit/')
-        self.assertEqual(response.status_code, HTTPStatus.NOT_FOUND)
-
-    def test_post_edit_redirect_not_author(self):
-        """редирект со страницы /<username>/<post_id>/edit/для тех,
-        у кого нет прав доступа к этой странице."""
-        url = f'/{self.user.username}/{self.post2.id}/edit'
-        response = self.authorized_client.get(url)
-        self.assertEqual(response.status_code, HTTPStatus.MOVED_PERMANENTLY)
 
     def test_urls_guest_client_200(self):
         """Тест страниц 200 для анонима"""
@@ -88,8 +82,8 @@ class PostsURLTests(TestCase):
             f'/group/{self.group.slug}/',
             '/new/',
             f'/{self.user.username}/',
-            f'/{self.user.username}/1/',
-            f'/{self.user.username}/1/edit/'
+            f'/{self.user.username}/{self.post.id}/',
+            f'/{self.user.username}/{self.post.id}/edit/'
         ]
         for url in test_urls:
             with self.subTest(url=url):

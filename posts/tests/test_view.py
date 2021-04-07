@@ -3,6 +3,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 
 from posts.models import Post, User, Group
+from posts.views import PAGINATE_BY
 
 
 class PostsViewsTests(TestCase):
@@ -21,18 +22,41 @@ class PostsViewsTests(TestCase):
             description='Тестовая группа',
         )
 
+        cls.group2 = Group.objects.create(
+            title='TestGroupName2',
+            slug='test-slug2',
+            description='Тестовая группа2',
+        )
+
         cls.post = Post.objects.create(
             text='Текст поста',
             group=cls.group,
             author=cls.user
         )
 
+    def check_post_fields(self, response, name):
+        self.assertIn('page', response.context)
+        post_object = response.context['page'][0]
+        post_author_0 = post_object.author
+        post_pub_date_0 = post_object.pub_date
+        post_text_0 = post_object.text
+        if name == 'post':
+            post_group_0 = post_object.group_id
+            self.assertEqual(post_group_0, self.post.group_id)
+        else:
+            post_group_0 = response.context['group'].id
+            self.assertEqual(post_group_0, self.group.id)
+        self.assertEqual(post_author_0, self.user)
+        self.assertEqual(post_pub_date_0, self.post.pub_date)
+        self.assertEqual(post_text_0, self.post.text)
+
     def test_pages_use_correct_template(self):
         """URL-адрес использует соответствующий шаблон."""
 
         templates_pages_names = {
             'index.html': reverse('index'),
-            'group.html': reverse('group_posts', kwargs={'slug': 'test-slug'}),
+            'group.html': reverse('group_posts',
+                                  kwargs={'slug': self.group.slug}),
             'post_new.html': reverse('post_edit', kwargs={
                 'username': self.user.username,
                 'post_id': self.post.id}),
@@ -44,34 +68,16 @@ class PostsViewsTests(TestCase):
                 self.assertTemplateUsed(response, template)
 
     def test_index_correct_context(self):
-        """Шаблон index сформирован с правильным контекстом
+        """Шаблон index, group сформирован с правильным контекстом
          на главной странице."""
 
-        response = self.authorized_client.get(reverse('index'))
-        post_object = response.context['page'][0]
-        post_author_0 = post_object.author
-        post_pub_date_0 = post_object.pub_date
-        post_text_0 = post_object.text
-        self.assertEqual(post_author_0, self.user)
-        self.assertEqual(post_pub_date_0, self.post.pub_date)
-        self.assertEqual(post_text_0, self.post.text)
-
-    def test_group_page_show_correct_context(self):
-        """Шаблон group сформирован с правильным контекстом."""
-
-        response = self.authorized_client.get(
-            reverse('group_posts', kwargs={'slug': 'test-slug'})
+        response_index = self.authorized_client.get(reverse('index'))
+        response_group = self.authorized_client.get(
+            reverse('group_posts', kwargs={'slug': self.group.slug})
         )
-        post_object = response.context['page'][0]
-        post_author_0 = post_object.author
-        post_pub_date_0 = post_object.pub_date
-        post_text_0 = post_object.text
-        post_object_group = response.context['group']
-        group_title = post_object_group.title
-        self.assertEqual(post_author_0, self.user)
-        self.assertEqual(post_pub_date_0, self.post.pub_date)
-        self.assertEqual(post_text_0, self.post.text)
-        self.assertEqual(group_title, self.group.title)
+
+        self.check_post_fields(response_index, 'post')
+        self.check_post_fields(response_group, 'group')
 
     def test_new_post_page_show_correct_context(self):
         """Шаблон new_post сформирован с правильным контекстом."""
@@ -85,10 +91,6 @@ class PostsViewsTests(TestCase):
                 form_field = response.context['form'].fields[value]
                 self.assertIsInstance(form_field, expected)
 
-    # для ревью. тут проверяется, что пост
-    # попал в нужную группу (значит в ненужную не попал)
-    # коменты потом уберу
-
     def test_index_group_list_page_list_is_1(self):
         """Удостоверимся, что на главную
         страницу и group со списком постов передаётся
@@ -97,9 +99,12 @@ class PostsViewsTests(TestCase):
         response_main = self.authorized_client.get(reverse('index'))
         response_group = self.authorized_client.get(
             reverse('group_posts', kwargs={'slug': 'test-slug'}))
+        response_group2 = self.authorized_client.get(
+            reverse('group_posts', kwargs={'slug': 'test-slug2'}))
         post_context = {
             len(response_main.context['page']): 1,
             len(response_group.context['page']): 1,
+            len(response_group2.context['page']): 0,
         }
         for key, value in post_context.items():
             with self.subTest(key=key, value=value):
@@ -114,9 +119,10 @@ class PostsViewsTests(TestCase):
                 'post_id': self.post.id
             })
         )
-
-        self.assertEqual(response.context['post'].text, self.post.text)
-        self.assertEqual(response.context['post'].author.username,
+        post = response.context['post']
+        self.assertIn('post', response.context)
+        self.assertEqual(post.text, self.post.text)
+        self.assertEqual(post.author.username,
                          self.user.username)
 
     def test_profile_page_show_correct_context(self):
@@ -124,6 +130,7 @@ class PostsViewsTests(TestCase):
 
         response = self.authorized_client.get(
             reverse('profile', kwargs={'username': self.user.username}))
+        self.assertIn('page', response.context)
         self.assertEqual(response.context['author'], self.user)
         self.assertEqual(response.context['page'][0], self.post)
 
@@ -136,6 +143,7 @@ class PostsViewsTests(TestCase):
                 'post_id': self.post.id,
             })
         )
+        self.assertIn('post', response.context)
         post_context = {
             response.context['post'].text: self.post.text,
             response.context['post'].author.username: self.user.username
@@ -152,23 +160,37 @@ class PaginatorViewsTest(TestCase):
         cls.user = User.objects.create(username='ivan')
         cls.client = Client()
         cls.client.force_login(cls.user)
-        for i in range(13):
-            Post.objects.create(
-                text='Тестовый пост',
-                author=cls.user,
-            )
+        cls.group = Group.objects.create(
+            title='Название',
+            slug='slug',
+            description='Описание',
+        )
+        cls.POST_NUMBER = 3
 
-    def test_paginator(self):
+        objs = [
+            Post(text=f'Текст тестового поста {i}',
+                 group=cls.group,
+                 author=cls.user)
+            for i in range(PAGINATE_BY + cls.POST_NUMBER)
+        ]
+        Post.objects.bulk_create(objs)
+
+    def test_pages_contains_records(self):
         response_index = self.client.get(reverse('index'))
-        response_index_page2 = self.client.get(reverse('index') + '?page=2')
-        response_group = self.client.get(reverse('index'))
-        response_group_page2 = self.client.get(reverse('index') + '?page=2')
+        response_index_page2 = self.client.get(reverse('index'), {'page': 2})
+        response_group = self.client.get(
+            reverse('group_posts', kwargs={'slug': self.group.slug}))
+        response_group_page2 = self.client.get(
+            reverse('group_posts', kwargs={'slug': self.group.slug}),
+            {'page': 2})
 
         post_context = {
-            len(response_index.context.get('page').object_list): 10,
-            len(response_index_page2.context.get('page').object_list): 3,
-            len(response_group.context.get('page').object_list): 10,
-            len(response_group_page2.context.get('page').object_list): 3,
+            len(response_index.context.get('page').object_list): PAGINATE_BY,
+            len(response_index_page2.context.get(
+                'page').object_list): self.POST_NUMBER,
+            len(response_group.context.get('page').object_list): PAGINATE_BY,
+            len(response_group_page2.context.get(
+                'page').object_list): self.POST_NUMBER,
 
         }
         for key, value in post_context.items():
