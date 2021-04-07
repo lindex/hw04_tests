@@ -176,23 +176,14 @@ class PaginatorViewsTest(TestCase):
         Post.objects.bulk_create(objs)
 
     def test_pages_contains_records(self):
-        response_index = self.client.get(reverse('index'))
-        response_index_page2 = self.client.get(reverse('index'), {'page': 2})
-        response_group = self.client.get(
+        response_pages = (
+            reverse('index'),
             reverse('group_posts', kwargs={'slug': self.group.slug}))
-        response_group_page2 = self.client.get(
-            reverse('group_posts', kwargs={'slug': self.group.slug}),
-            {'page': 2})
-
-        post_context = {
-            len(response_index.context.get('page').object_list): PAGINATE_BY,
-            len(response_index_page2.context.get(
-                'page').object_list): self.POST_NUMBER,
-            len(response_group.context.get('page').object_list): PAGINATE_BY,
-            len(response_group_page2.context.get(
-                'page').object_list): self.POST_NUMBER,
-
-        }
-        for key, value in post_context.items():
-            with self.subTest(key=key, value=value):
-                self.assertEqual(key, value)
+        pages_list = {PAGINATE_BY: 1, self.POST_NUMBER: 2}
+        for records, page_number in pages_list.items():
+            for page in response_pages:
+                response = self.client.get(page, {'page': page_number})
+                with self.subTest():
+                    self.assertEqual(
+                        len(response.context.get('page').object_list),
+                        int(records))
