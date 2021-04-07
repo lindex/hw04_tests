@@ -7,8 +7,6 @@ from .forms import PostForm
 from .models import Post, Group, User
 
 
-
-
 def index(request):
     post_list = Post.objects.all()
     paginator = Paginator(post_list, PAGINATE_BY)
