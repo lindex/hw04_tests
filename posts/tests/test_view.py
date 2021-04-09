@@ -10,42 +10,34 @@ class PostsViewsTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
-
         cls.guest_client = Client()
         cls.user = User.objects.create_user(username='ivan')
         cls.authorized_client = Client()
         cls.authorized_client.force_login(cls.user)
-
         cls.group = Group.objects.create(
             title='TestGroupName',
             slug='test-slug',
             description='Тестовая группа',
         )
-
         cls.group2 = Group.objects.create(
             title='TestGroupName2',
             slug='test-slug2',
             description='Тестовая группа2',
         )
-
         cls.post = Post.objects.create(
             text='Текст поста',
             group=cls.group,
             author=cls.user
         )
 
-    def check_post_fields(self, response, name):
-        self.assertIn('page', response.context)
+    def check_post_fields(self, response):
         post_object = response.context['page'][0]
         post_author_0 = post_object.author
         post_pub_date_0 = post_object.pub_date
         post_text_0 = post_object.text
-        if name == 'post':
-            post_group_0 = post_object.group_id
-            self.assertEqual(post_group_0, self.post.group_id)
-        else:
-            post_group_0 = response.context['group'].id
-            self.assertEqual(post_group_0, self.group.id)
+        post_group_0 = post_object.group_id
+        self.assertIn('page', response.context)
+        self.assertEqual(post_group_0, self.post.group_id)
         self.assertEqual(post_author_0, self.user)
         self.assertEqual(post_pub_date_0, self.post.pub_date)
         self.assertEqual(post_text_0, self.post.text)
@@ -68,16 +60,26 @@ class PostsViewsTests(TestCase):
                 self.assertTemplateUsed(response, template)
 
     def test_index_correct_context(self):
-        """Шаблон index, group сформирован с правильным контекстом
+        """Шаблон index сформирован с правильным контекстом
          на главной странице."""
 
         response_index = self.authorized_client.get(reverse('index'))
-        response_group = self.authorized_client.get(
-            reverse('group_posts', kwargs={'slug': self.group.slug})
-        )
+        self.check_post_fields(response_index)
 
-        self.check_post_fields(response_index, 'post')
-        self.check_post_fields(response_group, 'group')
+    def test_group_correct_context(self):
+        """Шаблон group сформирован с правильным контекстом
+         на главной странице."""
+
+        response = self.authorized_client.get(
+            reverse(
+                'group_posts',
+                kwargs={'slug': self.group.slug}))
+        group_object = response.context['group']
+        self.assertEqual(group_object.title, self.group.title)
+        self.assertEqual(
+            group_object.description, self.group.description)
+
+        self.check_post_fields(response)
 
     def test_new_post_page_show_correct_context(self):
         """Шаблон new_post сформирован с правильным контекстом."""
@@ -91,24 +93,26 @@ class PostsViewsTests(TestCase):
                 form_field = response.context['form'].fields[value]
                 self.assertIsInstance(form_field, expected)
 
-    def test_index_group_list_page_list_is_1(self):
+    def test_index_group_list_page_post_is_1(self):
         """Удостоверимся, что на главную
         страницу и group со списком постов передаётся
          ожидаемое количество постов"""
+        # по поводу
+        # "проверка должна быть такой: получили post из контекста и передали в check_post_fields"
+        # мы котекст поста проверяем в отдельной проверке же. эта функция нам тут не подходит
 
-        response_main = self.authorized_client.get(reverse('index'))
-        response_group = self.authorized_client.get(
-            reverse('group_posts', kwargs={'slug': 'test-slug'}))
-        response_group2 = self.authorized_client.get(
-            reverse('group_posts', kwargs={'slug': 'test-slug2'}))
-        post_context = {
-            len(response_main.context['page']): 1,
-            len(response_group.context['page']): 1,
-            len(response_group2.context['page']): 0,
+        page_list = {
+            reverse('index'): 1,
+            reverse('group_posts', kwargs={'slug': self.group.slug}): 1,
+            reverse('group_posts', kwargs={'slug': self.group2.slug}): 0,
         }
-        for key, value in post_context.items():
-            with self.subTest(key=key, value=value):
-                self.assertEqual(key, value)
+
+        for url in page_list:
+            response = self.client.get(url, {'page': 1})
+            with self.subTest():
+                self.assertEqual(
+                    len(response.context.get('page').object_list),
+                    page_list[url])
 
     def test_edit_post_page_show_correct_context(self):
         """Шаблон post_edit сформирован с правильным контекстом."""
@@ -130,13 +134,11 @@ class PostsViewsTests(TestCase):
 
         response = self.authorized_client.get(
             reverse('profile', kwargs={'username': self.user.username}))
-        self.assertIn('page', response.context)
-        self.assertEqual(response.context['author'], self.user)
-        self.assertEqual(response.context['page'][0], self.post)
+        self.check_post_fields(response)
 
     def test_post_page_show_correct_context(self):
         """Шаблон post сформирован с правильным контекстом."""
-
+        
         response = self.authorized_client.get(
             reverse('post', kwargs={
                 'username': self.user.username,
@@ -178,7 +180,8 @@ class PaginatorViewsTest(TestCase):
     def test_pages_contains_records(self):
         response_pages = (
             reverse('index'),
-            reverse('group_posts', kwargs={'slug': self.group.slug}))
+            reverse('group_posts', kwargs={'slug': self.group.slug}),
+            reverse('profile', kwargs={'username': self.user.username}))
         pages_list = {PAGINATE_BY: 1, self.POST_NUMBER: 2}
         for records, page_number in pages_list.items():
             for page in response_pages:
