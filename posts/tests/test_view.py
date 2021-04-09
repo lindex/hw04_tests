@@ -98,8 +98,11 @@ class PostsViewsTests(TestCase):
         страницу и group со списком постов передаётся
          ожидаемое количество постов"""
         # по поводу
-        # "проверка должна быть такой: получили post из контекста и передали в check_post_fields"
-        # мы котекст поста проверяем в отдельной проверке же. эта функция нам тут не подходит
+        # "проверка должна быть такой:
+        # получили post из контекста
+        # и передали в check_post_fields"
+        # мы котекст поста проверяем
+        # в отдельной проверке же. эта функция нам тут не подходит
 
         page_list = {
             reverse('index'): 1,
@@ -138,7 +141,7 @@ class PostsViewsTests(TestCase):
 
     def test_post_page_show_correct_context(self):
         """Шаблон post сформирован с правильным контекстом."""
-        
+
         response = self.authorized_client.get(
             reverse('post', kwargs={
                 'username': self.user.username,
